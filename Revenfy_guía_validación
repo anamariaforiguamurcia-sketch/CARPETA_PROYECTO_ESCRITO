@@ -1,0 +1,1027 @@
+# GUÍA 1
+
+## Validación del Modelo Entidad-Relación frente a las Funcionalidades del Software
+
+La pregunta de esta guía es muy sencilla:
+
+**¿Las tablas que tengo permiten hacer lo que mi sistema necesita hacer?**
+
+Como cuando tienes una caja de LEGO.
+
+Si quieres construir una casa, debes comprobar si tienes las piezas necesarias.
+
+Aquí:
+
+- **Funcionalidad** = lo que quiero construir. 
+- **Entidad** = la pieza. 
+- **Relación** = cómo conecto las piezas. 
+- **PK** = el nombre único de cada      pieza. 
+- **FK** = la conexión entre piezas.      
+
+La guía pide entre **15 y 25 funcionalidades** y después enfrentarlas contra el DER. 
+
+---
+
+## FASE 1 — LISTA DE FUNCIONALIDADES
+
+Yo recomiendo usar **20 funcionalidades**, pero correctamente clasificadas.
+
+**A. Funcionalidades de negocio**
+
+Estas son las importantes para validar contra el DER.
+
+| ID | Funcionalidad | ¿Estado actual? |
+|---|---|---|
+| F01 | Registrar usuario | Desarrollada |
+| F02 | Consultar usuarios | Desarrollada |
+| F03 | Consultar usuario por ID | Desarrollada/documentada |
+| F04 | Actualizar usuario | Desarrollada |
+| F05 | Eliminar usuario | Desarrollada |
+| F06 | Registrar producto | Desarrollada |
+| F07 | Consultar productos | Desarrollada |
+| F08 | Consultar producto por ID | Desarrollada/documentada |
+| F09 | Consultar productos por usuario | Desarrollada |
+| F10 | Actualizar producto | Desarrollada |
+| F11 | Eliminar producto | Desarrollada |
+| F12 | Clasificar productos por categoría | Soportada por el modelo corregido |
+| F13 | Asociar un producto a su vendedor | Soportada y necesaria |
+| F14 | Registrar país de origen de un usuario | Soportada por modelo actual |
+| F15 | Registrar país de origen de un producto | Soportada por modelo actual |
+| F16 | Registrar redes sociales de un usuario | Soportada por modelo actual |
+| F17 | Registrar pedido | Modelada / pendiente según API actual |
+| F18 | Asociar productos a un pedido | Modelada mediante Detalle_Pedido |
+| F19 | Registrar cantidad de productos en un pedido | Modelada mediante Detalle_Pedido |
+| F20 | Consultar relación entre entidades del sistema | Soportada mediante FK y relaciones |
+
+**¿Por qué mezclamos desarrolladas y modeladas?**
+
+Porque **la primera guía no pregunta solamente qué endpoints terminaste**.
+
+Pregunta si el **MER soporta las funcionalidades del software**. 
+
+Por eso debemos indicar claramente el estado de cada una.
+
+---
+
+## FASE 2 — FUNCIONALIDAD CONTRA EL DER
+
+Vamos una por una.
+
+---
+
+**F01 — Registrar usuario**
+
+**¿Qué necesito?**
+
+Una entidad donde guardar usuarios.
+
+**Entidad**
+
+**USUARIO**
+
+**Datos necesarios**
+
+Por lo que hemos trabajado, Usuario debe tener sus datos propios, por ejemplo:
+
+- id\_usuario 
+- nombres 
+- apellidos 
+- documento 
+- correo 
+- contraseña 
+- teléfono 
+- datos de      formación/identificación que correspondan al modelo actual 
+- referencia al país 
+- referencia al rol, según el      modelo definitivo 
+
+**PK**
+
+id\_usuario
+
+**Relaciones**
+
+Usuario se relaciona con:
+
+- Rol. 
+- País. 
+- Redes sociales. 
+- Productos. 
+- Pedidos. 
+
+**¿Está soportada?**
+
+**Sí.**
+
+**Justificación**
+
+Existe una entidad propia para guardar usuarios.
+
+---
+
+**F02 — Consultar usuarios**
+
+**Entidad**
+
+**USUARIO**
+
+**¿Necesita otra tabla?**
+
+No necesariamente.
+
+**¿Está soportada?**
+
+**Sí.**
+
+**Explicación sencilla**
+
+Si los usuarios están guardados, se pueden consultar.
+
+No necesitamos crear otra entidad llamada:
+
+CONSULTA\_USUARIO ❌
+
+Eso sería un error.
+
+---
+
+**F03 — Consultar usuario por ID**
+
+**Entidad**
+
+USUARIO.
+
+**Dato principal**
+
+id\_usuario.
+
+**¿Está soportada?**
+
+**Sí.**
+
+**¿Por qué?**
+
+Porque la PK permite identificar un usuario único.
+
+Ejemplo:
+
+id\_usuario = 5
+
+Busca solamente al usuario número 5.
+
+---
+
+**F04 — Actualizar usuario**
+
+**Entidad**
+
+USUARIO.
+
+**¿Está soportada?**
+
+**Sí.**
+
+**Regla importante**
+
+No debemos crear una tabla nueva para "actualizar usuario".
+
+Actualizar significa modificar un registro que ya existe.
+
+---
+
+**F05 — Eliminar usuario**
+
+**Entidad**
+
+USUARIO.
+
+**¿Está soportada?**
+
+**Sí técnicamente**, pero aquí debemos revisar una regla importante.
+
+**Posible problema**
+
+¿Qué pasa si ese usuario tiene productos publicados?
+
+Por ejemplo:
+
+USUARIO 5
+
+   ↓
+
+PRODUCTO 10
+
+PRODUCTO 11
+
+PRODUCTO 12
+
+Si borramos al usuario directamente:
+
+**¿qué pasa con los productos?**
+
+Esto debe definirse mediante una regla de integridad.
+
+Opciones:
+
+1. No permitir eliminarlo si      tiene información relacionada. 
+2. Eliminar en cascada. 
+3. Desactivar el usuario en      lugar de eliminarlo físicamente. 
+
+**Mi recomendación profesional**
+
+Para un marketplace como Revenfy:
+
+**Es mejor evaluar una eliminación lógica mediante estado que borrar usuarios con información relacionada.**
+
+¿Por qué?
+
+Porque borrar datos puede destruir historial y relaciones.
+
+**Pero no voy a decir que esto ya está implementado.** Es una mejora/recomendación que debemos decidir según su alcance.
+
+---
+
+**F06 — Registrar producto**
+
+**Entidad principal**
+
+PRODUCTO.
+
+**Relaciones necesarias**
+
+El producto necesita saber:
+
+- quién lo publicó; 
+- a qué categoría pertenece; 
+- cuál es su país de origen,      según la corrección realizada. 
+
+Entonces:
+
+USUARIO
+
+   1
+
+   │
+
+   │ publica
+
+   N
+
+PRODUCTO
+
+También:
+
+CATEGORIA 1 ───── N PRODUCTO
+
+PAIS      1 ───── N PRODUCTO
+
+**¿Está soportada?**
+
+**Sí, con el modelo corregido.**
+
+---
+
+**F07 — Consultar productos**
+
+**Entidad**
+
+PRODUCTO.
+
+**¿Está soportada?**
+
+**Sí.**
+
+Se consulta directamente la información almacenada.
+
+---
+
+**F08 — Consultar producto por ID**
+
+**Entidad**
+
+PRODUCTO.
+
+**PK**
+
+id\_producto.
+
+**¿Está soportada?**
+
+**Sí.**
+
+Misma lógica que Usuario:
+
+id\_producto = 10
+
+identifica un producto específico.
+
+---
+
+**F09 — Consultar productos por usuario**
+
+Esta funcionalidad es MUY importante porque demuestra que la relación Usuario–Producto está bien diseñada.
+
+**Entidades**
+
+- USUARIO 
+- PRODUCTO 
+
+**Relación**
+
+USUARIO 1 ───── N PRODUCTO
+
+Un usuario puede publicar muchos productos.
+
+Un producto pertenece a un usuario.
+
+**FK**
+
+En PRODUCTO debe existir una referencia al usuario, por ejemplo:
+
+id\_usuario
+
+**¿Está soportada?**
+
+**Sí.**
+
+Y esto coincide con el endpoint actual documentado para consultar productos asociados a un usuario. 
+
+---
+
+**F10 — Actualizar producto**
+
+**Entidad**
+
+PRODUCTO.
+
+**¿Está soportada?**
+
+**Sí.**
+
+**Regla de negocio importante**
+
+Un producto no debe tener un precio negativo.
+
+Además, la documentación actual establece como regla que solo quien publicó un producto debería poder editarlo o eliminarlo. 
+
+**PERO ATENCIÓN**
+
+La documentación también dice que actualmente **no existe autenticación ni autorización implementada**. 
+
+Por tanto, debemos escribirlo correctamente:
+
+**La regla de propiedad está definida en la lógica de negocio esperada, pero para garantizarla completamente en producción se requiere autenticación y autorización.**
+
+No podemos decir:
+
+"Ya está completamente protegido por roles."
+
+porque actualmente eso no está implementado.
+
+---
+
+**F11 — Eliminar producto**
+
+**Entidad**
+
+PRODUCTO.
+
+**¿Está soportada?**
+
+Sí.
+
+**Revisión profesional**
+
+Igual que Usuario, debemos evaluar si en el futuro conviene usar:
+
+estado\_producto = INACTIVO
+
+en vez de borrar físicamente.
+
+¿Por qué?
+
+Porque después un producto podría estar relacionado con:
+
+- pedidos; 
+- historial; 
+- estadísticas. 
+
+Esto será especialmente importante porque ustedes ya modelaron PEDIDO y DETALLE\_PEDIDO.
+
+---
+
+**F12 — Clasificar productos por categoría**
+
+Aquí tenemos una corrección importante que ya realizaron.
+
+**Diseño incorrecto**
+
+PRODUCTO
+
+\---------
+
+id\_producto
+
+nombre
+
+categoria = "Tecnología"
+
+Esto puede causar repetición:
+
+Tecnología
+
+tecnologia
+
+TECNOLOGÍA
+
+**Diseño corregido**
+
+CATEGORIA
+
+\---------
+
+id\_categoria
+
+nombre\_categoria
+
+ 
+
+        1
+
+        │
+
+        │
+
+        N
+
+ 
+
+PRODUCTO
+
+\---------
+
+id\_producto
+
+id\_categoria FK
+
+**¿Por qué está mejor?**
+
+Porque una categoría se guarda una sola vez.
+
+Eso evita redundancia y ayuda a cumplir la normalización que exige la guía. 
+
+---
+
+**F13 — Asociar producto a vendedor**
+
+**Entidades**
+
+USUARIO y PRODUCTO.
+
+**Relación**
+
+USUARIO 1 ───── N PRODUCTO
+
+**¿Está soportada?**
+
+**Sí.**
+
+**FK**
+
+PRODUCTO debe tener:
+
+id\_usuario
+
+---
+
+**F14 — Registrar país de origen de usuario**
+
+Ustedes corrigieron esto creando una relación con País.
+
+Entonces:
+
+PAIS 1 ───── N USUARIO
+
+Un país puede ser el país de origen de muchos usuarios.
+
+Cada usuario tiene un país de origen.
+
+**¿Está soportada?**
+
+**Sí, según el modelo actualizado que hemos trabajado.**
+
+---
+
+**F15 — Registrar país de origen de producto**
+
+Igual:
+
+PAIS 1 ───── N PRODUCTO
+
+**¿Está soportada?**
+
+**Sí.**
+
+---
+
+**F16 — Registrar redes sociales**
+
+Aquí debemos tener cuidado.
+
+Un usuario puede tener varias redes.
+
+Ejemplo:
+
+Ana
+
+├── Instagram
+
+├── Facebook
+
+└── LinkedIn
+
+Por eso NO conviene:
+
+USUARIO
+
+redes\_sociales = "Instagram, Facebook, LinkedIn"
+
+❌ Malo.
+
+Porque son varios datos dentro de una misma celda.
+
+Mejor:
+
+USUARIO 1 ───── N RED\_SOCIAL
+
+**¿Está soportada?**
+
+**Sí, con la entidad de redes sociales que ustedes agregaron.**
+
+Esto evita atributos multivaluados y ayuda con 1FN.
+
+---
+
+**F17 — Registrar pedido**
+
+**Entidades**
+
+- PEDIDO. 
+- USUARIO. 
+
+**Relación**
+
+USUARIO 1 ───── N PEDIDO
+
+Un usuario puede realizar varios pedidos.
+
+**¿Está modelada?**
+
+**Sí, según las correcciones que hemos trabajado.**
+
+**¿Está desarrollada completamente en la API actual?**
+
+**No debemos afirmarlo.**
+
+Actualmente la documentación técnica que encontramos demuestra CRUD principalmente para Usuarios y Productos. 
+
+Por tanto, en la matriz debe aparecer:
+
+**Estado: soportada por el DER / pendiente de desarrollo del módulo.**
+
+---
+
+**F18 — Asociar productos a un pedido**
+
+Aquí estaba una de las correcciones más importantes.
+
+**Problema**
+
+Un pedido puede tener muchos productos.
+
+Y un producto puede aparecer en diferentes pedidos.
+
+Entonces:
+
+PEDIDO N ───── N PRODUCTO
+
+Una relación N\:M necesita una entidad intermedia. La guía usa precisamente este tipo de caso como ejemplo y propone una entidad como DETALLE\_PEDIDO. 
+
+**Solución**
+
+PEDIDO 1 ─── N DETALLE\_PEDIDO N ─── 1 PRODUCTO
+
+---
+
+**F19 — Registrar cantidad de productos en pedido**
+
+¿Dónde ponemos la cantidad?
+
+NO aquí:
+
+PEDIDO
+
+cantidad\_producto
+
+Porque un pedido puede tener:
+
+Producto A = 2
+
+Producto B = 1
+
+Producto C = 5
+
+La cantidad pertenece a la relación entre **un pedido específico y un producto específico**.
+
+Por eso:
+
+DETALLE\_PEDIDO
+
+\---------------
+
+id\_detalle\_pedido
+
+id\_pedido FK
+
+id\_producto FK
+
+cantidad
+
+**¿Está bien?**
+
+**Sí.**
+
+Esta fue una buena corrección.
+
+---
+
+**F20 — Consultar relaciones del sistema**
+
+Esta funcionalidad se soporta mediante:
+
+- PK. 
+- FK. 
+- relaciones. 
+- consultas. 
+
+Ejemplo:
+
+Consultar los productos de un usuario:
+
+PRODUCTO.id\_usuario
+
+        ↓
+
+USUARIO.id\_usuario
+
+---
+
+**MATRIZ FUNCIONALIDAD VS DER**
+
+Esta es una versión que puedes llevar al documento:
+
+| ID | Funcionalidad | Entidades | Relaciones | ¿Soportada? | Acción |
+|---|---|---|---|---|---|
+| F01 | Registrar usuario | Usuario, País, Rol | Usuario–País, Usuario–Rol | Sí | Mantener |
+| F02 | Consultar usuarios | Usuario | — | Sí | Mantener |
+| F03 | Consultar usuario | Usuario | — | Sí | Mantener |
+| F04 | Actualizar usuario | Usuario | — | Sí | Mantener |
+| F05 | Eliminar usuario | Usuario, Producto | Usuario–Producto | Parcial | Definir integridad/eliminación |
+| F06 | Registrar producto | Producto, Usuario, Categoría, País | Producto–Usuario, Producto–Categoría, Producto–País | Sí | Mantener |
+| F07 | Consultar productos | Producto | — | Sí | Mantener |
+| F08 | Consultar producto | Producto | — | Sí | Mantener |
+| F09 | Consultar productos por usuario | Usuario, Producto | 1:N | Sí | Mantener |
+| F10 | Actualizar producto | Producto | Producto–Usuario | Sí | Mantener |
+| F11 | Eliminar producto | Producto | Producto–Usuario | Parcial | Evaluar eliminación lógica |
+| F12 | Clasificar producto | Producto, Categoría | Categoría 1:N Producto | Sí | Mantener |
+| F13 | Asociar producto a vendedor | Usuario, Producto | Usuario 1:N Producto | Sí | Mantener |
+| F14 | País de usuario | Usuario, País | País 1:N Usuario | Sí | Mantener |
+| F15 | País de producto | Producto, País | País 1:N Producto | Sí | Mantener |
+| F16 | Redes sociales | Usuario, Red_Social | Usuario 1:N Red_Social | Sí | Mantener |
+| F17 | Registrar pedido | Usuario, Pedido | Usuario 1:N Pedido | Sí en DER | Pendiente API |
+| F18 | Agregar producto a pedido | Pedido, Producto, Detalle_Pedido | N:M resuelta | Sí | Mantener |
+| F19 | Registrar cantidad | Detalle_Pedido | Pedido–Producto | Sí | Mantener |
+| F20 | Consultar información relacionada | Todas según consulta | PK/FK | Sí | Mantener |
+
+---
+
+## FASE 3 — HALLAZGOS
+
+Esta guía también pide detectar qué estaba mal y qué se corrigió.
+
+**H01 — Categoría almacenada directamente como dato repetido**
+
+**Problema**
+
+Categoría como texto dentro de Producto.
+
+**¿Por qué está mal?**
+
+Se repite información.
+
+**Corrección**
+
+Crear:
+
+**CATEGORIA**
+
+y relacionarla con Producto.
+
+**Justificación**
+
+F12 — Clasificar productos.
+
+---
+
+**H02 — Rol almacenado como dato repetido**
+
+**Problema**
+
+Si el rol está directamente como texto:
+
+rol = "Vendedor"
+
+puede generar inconsistencias si el modelo de negocio necesita administrar roles como entidad.
+
+**Corrección**
+
+Mantener ROL como entidad **si esa es la decisión actual del DER**.
+
+Aquí necesito ser exacto: **no voy a inventar la cardinalidad final sin ver el DER actualizado**, especialmente porque debemos confirmar si un usuario tiene un solo rol o puede tener varios.
+
+---
+
+**H03 — País repetido como texto**
+
+**Problema**
+
+Guardar "Colombia" miles de veces.
+
+**Corrección**
+
+Entidad:
+
+**PAIS**
+
+relacionada con:
+
+- Usuario. 
+- Producto. 
+
+---
+
+**H04 — Redes sociales como atributo multivaluado**
+
+**Problema**
+
+Una sola columna con muchas redes.
+
+**Corrección**
+
+Entidad RED\_SOCIAL relacionada con USUARIO.
+
+---
+
+**H05 — Pedido y Producto en relación N\:M**
+
+**Problema**
+
+No se puede relacionar correctamente muchos productos con muchos pedidos sin una entidad intermedia.
+
+**Corrección**
+
+DETALLE\_PEDIDO.
+
+---
+
+**H06 — Cantidad almacenada en lugar incorrecto**
+
+**Problema**
+
+Cantidad dentro de PEDIDO no identifica a qué producto corresponde.
+
+**Corrección**
+
+cantidad dentro de DETALLE\_PEDIDO.
+
+---
+
+**H07 — Eliminación física sin revisar relaciones**
+
+**Problema**
+
+Borrar un usuario o producto relacionado puede romper integridad.
+
+**Solución propuesta**
+
+Definir reglas de eliminación y, para futuras relaciones comerciales, evaluar eliminación lógica.
+
+**Este es un hallazgo de mejora**, no afirmaré que ya fue implementado.
+
+---
+
+## REVISIÓN DE PK Y FK
+
+**Tabla de revisión**
+
+| Entidad | PK | FK necesarias |
+|---|---|---|
+| Usuario | id_usuario | id_rol*, id_pais* |
+| Rol | id_rol | — |
+| País | id_pais | — |
+| Producto | id_producto | id_usuario, id_categoria, id_pais |
+| Categoría | id_categoria | — |
+| Red_Social | id_red_social | id_usuario |
+| Pedido | id_pedido | id_usuario |
+| Detalle_Pedido | id_detalle_pedido | id_pedido, id_producto |
+
+**\*** Dependemos del DER definitivo para confirmar el nombre exacto de las FK.
+
+---
+
+## NORMALIZACIÓN
+
+**1FN**
+
+Debemos comprobar:
+
+**Correcto**
+
+PRODUCTO
+
+precio = 50000
+
+Un solo valor.
+
+**Incorrecto**
+
+USUARIO
+
+redes = "Instagram, Facebook"
+
+Varios valores.
+
+**Solución**
+
+RED\_SOCIAL.
+
+---
+
+**2FN**
+
+Los datos deben depender completamente de la clave.
+
+Ejemplo:
+
+En DETALLE\_PEDIDO:
+
+id\_detalle\_pedido
+
+id\_pedido
+
+id\_producto
+
+cantidad
+
+cantidad corresponde a ese detalle específico.
+
+---
+
+**3FN**
+
+Evitar:
+
+PRODUCTO
+
+id\_producto
+
+id\_categoria
+
+nombre\_categoria
+
+Porque:
+
+id\_categoria → nombre\_categoria
+
+nombre\_categoria debe estar en CATEGORIA.
+
+La guía pide precisamente revisar este tipo de dependencia. 
+
+---
+
+## RESPUESTAS FINALES A LAS 20 PREGUNTAS DE LA GUÍA 1
+
+**1. ¿Todas las funcionalidades pueden implementarse con el DER actual?**
+
+**Sí, las funcionalidades identificadas tienen soporte en el modelo corregido, aunque algunas, como Pedidos, todavía deben desarrollarse en la API.**
+
+**2. ¿Qué funcionalidades no están soportadas?**
+
+Con la información actual, no identificamos una funcionalidad principal sin representación en el DER corregido.
+
+**3. ¿Qué entidades faltaban?**
+
+Las correcciones realizadas incorporaron o separaron entidades necesarias como:
+
+- País. 
+- Redes sociales. 
+- Detalle\_Pedido. 
+- Categoría y Rol según el      modelo actualizado. 
+
+**4. ¿Qué atributos faltaban?**
+
+El principal atributo identificado en la relación Pedido–Producto fue:
+
+- cantidad. 
+
+Se ubicó correctamente en Detalle\_Pedido.
+
+**5. ¿Todas las relaciones necesarias están representadas?**
+
+Las principales sí:
+
+Usuario–Producto, Producto–Categoría, Usuario–Redes, Pedido–Detalle, Producto–Detalle y las relaciones con País.
+
+**6. ¿Hay relaciones innecesarias?**
+
+No debemos afirmar una sin comprobar el DER visual definitivo.
+
+**7. ¿Las cardinalidades son correctas?**
+
+Las propuestas son coherentes con el negocio:
+
+- Usuario 1\:N Producto. 
+- Categoría 1\:N Producto. 
+- País 1\:N Usuario. 
+- País 1\:N Producto. 
+- Usuario 1\:N Red\_Social. 
+- Usuario 1\:N Pedido. 
+- Pedido 1\:N Detalle\_Pedido. 
+- Producto 1\:N Detalle\_Pedido.      
+
+**8. ¿Había una N\:M?**
+
+Sí:
+
+Pedido–Producto.
+
+**9. ¿Todas tienen PK?**
+
+Ese debe ser un requisito obligatorio del DER corregido.
+
+**10. ¿Las FK están correctamente definidas?**
+
+Sí conceptualmente, pero verificaremos sus nombres exactos en el DER final.
+
+**11. ¿Hay relaciones sin FK?**
+
+No deberían quedar.
+
+**12. ¿Datos repetidos?**
+
+El modelo corregido reduce repetición mediante País, Categoría y Rol.
+
+**13. ¿Grupos repetitivos?**
+
+Detalle\_Pedido evita producto1, producto2, etc.
+
+**14. ¿Atributos multivaluados?**
+
+Redes sociales se separó para evitarlo.
+
+**15. ¿Dependencias parciales?**
+
+No identificamos una problemática principal con el diseño actual, pero se revisará especialmente Detalle\_Pedido.
+
+**16. ¿Dependencias transitivas?**
+
+Se evitan separando Categoría, País y otras entidades de referencia.
+
+**17. ¿Qué entidades necesitaban descomposición?**
+
+Principalmente la información relacionada con:
+
+- categorías; 
+- países; 
+- redes sociales; 
+- relación pedido-producto. 
+
+**18. ¿Qué cambios se realizaron?**
+
+Separación/uso de entidades y creación de Detalle\_Pedido.
+
+**19. ¿Qué funcionalidad motivó cada cambio?**
+
+- Clasificar productos →      Categoría. 
+- Registrar país → País. 
+- Manejar varias redes → Redes      sociales. 
+- Registrar varios productos      por pedido → Detalle\_Pedido. 
+- Registrar cantidades →      atributo cantidad en Detalle\_Pedido. 
+
+**20. ¿Qué problemas se solucionaron?**
+
+- Redundancia. 
+- Datos multivaluados. 
+- Relación N\:M incorrecta. 
+- Ubicación incorrecta de      cantidad. 
+
+  Mejor soporte para las funcionalidades futuras.    
