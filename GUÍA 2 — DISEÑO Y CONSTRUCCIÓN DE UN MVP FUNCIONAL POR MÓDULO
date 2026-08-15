@@ -1,0 +1,1065 @@
+
+# GUÍA 2 — DISEÑO Y CONSTRUCCIÓN DE UN MVP FUNCIONAL POR MÓDULO
+
+## Proyecto: Revenfy
+
+---
+
+# Introducción
+
+Esta guía se desarrolla tomando como base el estado actual del proyecto **Revenfy**, incluyendo las funcionalidades desarrolladas, las correcciones realizadas al modelo de datos y la lógica de negocio definida para la plataforma.
+
+Revenfy es una plataforma orientada a la compra y venta de productos de segunda mano. Dentro de su lógica de negocio intervienen diferentes roles, como comprador, vendedor y administrador.
+
+Para esta guía se seleccionó el **Módulo de Gestión de Productos**, debido a que es uno de los módulos que actualmente cuenta con mayor avance en el backend y permite demostrar la trazabilidad completa desde una necesidad del negocio hasta su implementación técnica.
+
+Es importante aclarar que durante esta documentación se diferencia entre:
+
+- Funcionalidades que ya están desarrolladas.
+- Funcionalidades soportadas por el modelo de datos actualizado.
+- Funcionalidades que hacen parte de la lógica futura del sistema pero aún están pendientes de implementación.
+
+De esta manera, la documentación representa el estado real del proyecto y evita afirmar que una funcionalidad está terminada cuando únicamente está modelada.
+
+---
+
+# 1. Nombre del módulo seleccionado
+
+## Módulo de Gestión de Productos
+
+---
+
+# 2. ¿Qué hace este módulo?
+
+El Módulo de Gestión de Productos permite administrar los productos publicados dentro de Revenfy.
+
+Actualmente, el módulo permite realizar las siguientes operaciones:
+
+- Registrar un producto.
+- Consultar todos los productos.
+- Consultar un producto específico.
+- Consultar los productos relacionados con un usuario.
+- Actualizar un producto.
+- Eliminar un producto.
+
+Este módulo es fundamental para la lógica de negocio de Revenfy, ya que una plataforma de compra y venta necesita permitir la publicación y gestión de los productos que serán ofrecidos a los demás usuarios.
+
+Sin este módulo, los usuarios podrían existir dentro del sistema, pero no habría productos disponibles para publicar, consultar o gestionar.
+
+---
+
+# FASE 1 — ANÁLISIS Y DISEÑO DEL MÓDULO
+
+# 3. Problema que resuelve
+
+El módulo de Gestión de Productos permite administrar la información de los productos publicados dentro de Revenfy.
+
+Resuelve la necesidad de permitir que los usuarios registren y gestionen los artículos que desean ofrecer dentro de la plataforma.
+
+Cada producto debe mantener una relación con el usuario que lo publica y, de acuerdo con el modelo de datos actualizado, debe relacionarse con la información complementaria necesaria, como categoría y país de origen.
+
+---
+
+# 4. Actor principal
+
+## Vendedor
+
+El actor principal del módulo es el **Vendedor**, ya que es quien publica y administra los productos que desea ofrecer dentro de Revenfy.
+
+Dentro de la lógica general del proyecto existen los siguientes roles:
+
+- Comprador.
+- Vendedor.
+- Administrador.
+
+Sin embargo, se debe diferenciar el rol de negocio de la implementación técnica actual.
+
+Actualmente, no se debe afirmar que la API controla completamente el acceso a las funcionalidades mediante autenticación y autorización por roles, a menos que dicha funcionalidad se encuentre implementada en el código definitivo.
+
+Por lo tanto:
+
+- **Actor de negocio:** Vendedor.
+- **Control técnico completo por autenticación y roles:** pendiente de implementación o confirmación según el estado definitivo del código.
+
+Esta aclaración permite mantener la documentación coherente con el estado real del sistema.
+
+---
+
+# 5. Funcionalidades del MVP
+
+El MVP del Módulo de Gestión de Productos estará compuesto por las siguientes funcionalidades:
+
+| ID | Funcionalidad | Estado |
+|---|---|---|
+| FM01 | Registrar producto | Desarrollada |
+| FM02 | Consultar productos | Desarrollada |
+| FM03 | Consultar producto por ID | Desarrollada |
+| FM04 | Consultar productos por usuario | Desarrollada |
+| FM05 | Actualizar producto | Desarrollada |
+| FM06 | Eliminar producto | Desarrollada |
+
+Estas funcionalidades permiten demostrar las principales operaciones CRUD del módulo y la relación existente entre Producto y Usuario.
+
+---
+
+# 6. Módulos y entidades relacionadas
+
+El módulo Productos no funciona de manera independiente.
+
+Se relaciona con otras entidades del modelo de datos de Revenfy.
+
+## 6.1 Usuario
+
+Cada producto debe estar relacionado con el usuario que lo publicó.
+
+La relación es:
+
+```text
+USUARIO 1 ───── N PRODUCTO
+````
+
+Esto significa que:
+
+* Un usuario puede publicar varios productos.
+* Un producto pertenece a un usuario.
+
+Ejemplo:
+
+```text
+Usuario Ana
+    │
+    ├── Producto: Chaqueta
+    ├── Producto: Libro
+    └── Producto: Tenis
+```
+
+---
+
+## 6.2 Categoría
+
+De acuerdo con las correcciones realizadas al modelo de datos, Categoría se maneja como una entidad independiente.
+
+La relación es:
+
+```text
+CATEGORÍA 1 ───── N PRODUCTO
+```
+
+Esto significa que:
+
+* Una categoría puede contener varios productos.
+* Un producto pertenece a una categoría.
+
+Ejemplo:
+
+```text
+Tecnología
+    │
+    ├── Celular
+    ├── Computador
+    └── Audífonos
+```
+
+Esta relación evita repetir información y permite mantener una estructura más organizada.
+
+---
+
+## 6.3 País
+
+De acuerdo con la actualización realizada al modelo de datos, un producto debe registrar su país de origen mediante una relación con la entidad País.
+
+La relación es:
+
+```text
+PAÍS 1 ───── N PRODUCTO
+```
+
+Esto significa que:
+
+* Un país puede estar relacionado con varios productos.
+* Un producto se relaciona con un país de origen.
+
+---
+
+## Resumen de entidades relacionadas
+
+| Entidad   | Relación con Productos       |
+| --------- | ---------------------------- |
+| Usuario   | Publica productos            |
+| Categoría | Clasifica productos          |
+| País      | Registra el país de origen   |
+| Producto  | Entidad principal del módulo |
+
+---
+
+# 7. Requisitos funcionales del MVP
+
+Los requisitos funcionales describen lo que el sistema debe permitir hacer.
+
+## RF01 — Registrar producto
+
+El sistema deberá permitir registrar un producto asociado a un usuario existente.
+
+El producto deberá contener la información requerida por el modelo y cumplir las validaciones definidas por el sistema.
+
+---
+
+## RF02 — Consultar productos
+
+El sistema deberá permitir consultar el listado de productos registrados en Revenfy.
+
+---
+
+## RF03 — Consultar producto específico
+
+El sistema deberá permitir consultar la información de un producto específico mediante su identificador.
+
+Ejemplo:
+
+```text
+GET /productos/5
+```
+
+La operación debe buscar únicamente el producto correspondiente al identificador solicitado.
+
+---
+
+## RF04 — Consultar productos por usuario
+
+El sistema deberá permitir consultar los productos asociados a un usuario específico.
+
+Este requisito permite utilizar la relación:
+
+```text
+USUARIO 1 ───── N PRODUCTO
+```
+
+---
+
+## RF05 — Actualizar producto
+
+El sistema deberá permitir actualizar la información de un producto existente.
+
+La información actualizada deberá cumplir las validaciones y reglas de negocio correspondientes.
+
+---
+
+## RF06 — Eliminar producto
+
+El sistema deberá permitir eliminar un producto existente.
+
+La eliminación debe realizarse de acuerdo con la lógica implementada actualmente.
+
+Como posible mejora futura, deberá evaluarse la implementación de eliminación lógica cuando las relaciones del producto con otras entidades, especialmente Pedidos y Detalle_Pedido, requieran conservar información histórica.
+
+No se debe afirmar que la eliminación lógica está implementada mientras no exista en el código.
+
+---
+
+# 8. Historias de usuario
+
+Las historias de usuario se construyen utilizando la siguiente estructura:
+
+> Como **rol**, quiero **acción**, para **beneficio**.
+
+---
+
+## HU01 — Registrar producto
+
+**Como vendedor, quiero registrar un producto con su información, para publicarlo dentro de Revenfy y ofrecerlo a otros usuarios.**
+
+---
+
+## HU02 — Consultar productos
+
+**Como comprador, quiero consultar los productos publicados, para conocer los artículos disponibles dentro de la plataforma.**
+
+---
+
+## HU03 — Consultar producto específico
+
+**Como comprador, quiero consultar la información detallada de un producto, para conocer sus características antes de tomar una decisión de compra.**
+
+---
+
+## HU04 — Consultar mis productos
+
+**Como vendedor, quiero consultar los productos que he publicado, para administrar mis publicaciones.**
+
+---
+
+## HU05 — Actualizar producto
+
+**Como vendedor, quiero actualizar la información de uno de mis productos, para mantener correcta y actualizada la información de mi publicación.**
+
+---
+
+## HU06 — Eliminar producto
+
+**Como vendedor, quiero eliminar un producto publicado, para retirarlo de la plataforma cuando ya no desee ofrecerlo.**
+
+---
+
+# 9. Reglas de negocio
+
+Las reglas de negocio definen condiciones que deben cumplirse para que las operaciones del sistema tengan sentido dentro de Revenfy.
+
+Se debe diferenciar una validación técnica de una regla de negocio.
+
+Por ejemplo:
+
+```text
+El correo debe contener un formato válido.
+```
+
+Corresponde principalmente a una validación técnica.
+
+En cambio:
+
+```text
+Todo producto debe pertenecer a un usuario existente.
+```
+
+Representa una regla relacionada con la lógica del negocio y la integridad de la información.
+
+---
+
+## RN01 — Precio válido
+
+El precio de un producto debe ser mayor que cero.
+
+No se debe permitir registrar un producto con un precio negativo.
+
+---
+
+## RN02 — Usuario existente
+
+Todo producto debe estar asociado a un usuario existente.
+
+No debe existir un producto relacionado con un identificador de usuario inexistente.
+
+Ejemplo incorrecto:
+
+```text
+PRODUCTO
+id_usuario = 9999
+```
+
+si el usuario con identificador `9999` no existe.
+
+---
+
+## RN03 — Información válida
+
+La información recibida para registrar o actualizar un producto debe cumplir las validaciones definidas en los esquemas del sistema.
+
+Las validaciones documentadas deben corresponder a las que realmente se encuentren implementadas en los esquemas del proyecto.
+
+---
+
+## RN04 — Producto existente
+
+Para consultar, actualizar o eliminar un producto, este debe existir previamente dentro del sistema.
+
+Si se solicita una operación sobre un producto inexistente, el sistema debe responder mediante un error controlado.
+
+---
+
+## RN05 — Propiedad del producto
+
+Un producto debe ser administrado por el usuario que lo publicó.
+
+Esta es una regla de negocio definida para Revenfy.
+
+Sin embargo, su aplicación técnica completa requiere mecanismos de autenticación y autorización que permitan identificar al usuario que realiza la solicitud.
+
+Por lo tanto, mientras estos mecanismos no estén completamente implementados, no se debe afirmar que el sistema ya aplica técnicamente esta restricción en todos los endpoints.
+
+---
+
+## RN06 — Relaciones válidas
+
+Un producto debe mantener relaciones válidas con las entidades requeridas por el modelo de datos actualizado.
+
+Esto incluye, según corresponda:
+
+* Usuario existente.
+* Categoría válida.
+* País válido.
+
+---
+
+# 10. Matriz de trazabilidad inicial
+
+| Funcionalidad                   | Requisito | Historia de Usuario | Reglas de Negocio      |
+| ------------------------------- | --------- | ------------------- | ---------------------- |
+| Registrar producto              | RF01      | HU01                | RN01, RN02, RN03, RN06 |
+| Consultar productos             | RF02      | HU02                | —                      |
+| Consultar producto              | RF03      | HU03                | RN04                   |
+| Consultar productos por usuario | RF04      | HU04                | RN02, RN04             |
+| Actualizar producto             | RF05      | HU05                | RN01, RN03, RN04, RN05 |
+| Eliminar producto               | RF06      | HU06                | RN04, RN05             |
+
+Esta matriz demuestra la relación existente entre una necesidad del usuario y su implementación dentro del sistema.
+
+El flujo de trazabilidad puede representarse de la siguiente manera:
+
+```text
+Historia de Usuario
+        ↓
+Requisito Funcional
+        ↓
+Reglas de Negocio
+        ↓
+Caso de Uso
+        ↓
+API
+        ↓
+Base de Datos
+        ↓
+Frontend
+```
+
+---
+
+# 11. Casos de uso
+
+## CU01 — Registrar producto
+
+### Actor principal
+
+Vendedor.
+
+### Precondiciones
+
+* El usuario debe existir.
+* Debe proporcionar la información requerida.
+* Los datos deben cumplir las validaciones definidas.
+* Las relaciones requeridas deben ser válidas.
+
+### Flujo principal
+
+1. El vendedor selecciona la opción Registrar producto.
+2. El sistema muestra el formulario correspondiente.
+3. El vendedor ingresa la información del producto.
+4. El vendedor envía los datos.
+5. El sistema valida la información recibida.
+6. El sistema verifica que el usuario relacionado exista.
+7. El sistema aplica las reglas de negocio.
+8. El sistema registra el producto.
+9. La información se almacena en la base de datos.
+10. El sistema devuelve una respuesta exitosa.
+
+### Flujo alternativo
+
+Si la información no cumple las validaciones:
+
+1. El sistema rechaza la solicitud.
+2. Devuelve un mensaje de error.
+3. El producto no se registra.
+
+---
+
+## CU02 — Consultar productos
+
+### Actor principal
+
+Comprador.
+
+### Flujo principal
+
+1. El usuario solicita consultar los productos.
+2. El sistema recibe la solicitud.
+3. El sistema consulta la información almacenada.
+4. El sistema devuelve el listado de productos.
+
+---
+
+## CU03 — Consultar producto específico
+
+### Actor principal
+
+Comprador.
+
+### Flujo principal
+
+1. El usuario selecciona un producto.
+2. El sistema recibe el identificador del producto.
+3. El sistema busca el producto.
+4. Si el producto existe, devuelve su información.
+5. Si el producto no existe, devuelve un error controlado.
+
+---
+
+## CU04 — Consultar productos por usuario
+
+### Actor principal
+
+Vendedor.
+
+### Flujo principal
+
+1. El sistema recibe el identificador del usuario.
+2. Consulta los productos asociados al usuario.
+3. Devuelve los productos encontrados.
+
+---
+
+## CU05 — Actualizar producto
+
+### Actor principal
+
+Vendedor.
+
+### Flujo principal
+
+1. El vendedor selecciona un producto.
+2. Solicita modificar su información.
+3. El sistema busca el producto.
+4. Verifica que el producto exista.
+5. Recibe la nueva información.
+6. Valida los datos.
+7. Aplica las reglas correspondientes.
+8. Actualiza el producto.
+9. Devuelve una respuesta con el resultado de la operación.
+
+---
+
+## CU06 — Eliminar producto
+
+### Actor principal
+
+Vendedor.
+
+### Flujo principal
+
+1. El vendedor selecciona un producto.
+2. Solicita eliminarlo.
+3. El sistema busca el producto.
+4. Verifica que exista.
+5. Ejecuta la eliminación según la lógica implementada.
+6. Devuelve una respuesta con el resultado de la operación.
+
+---
+
+# 12. Proceso principal del módulo
+
+El proceso principal seleccionado para demostrar el funcionamiento del MVP es el registro de un producto.
+
+```text
+INICIO
+  ↓
+El vendedor selecciona "Registrar producto"
+  ↓
+Ingresa los datos del producto
+  ↓
+Envía el formulario
+  ↓
+El frontend envía una solicitud POST
+  ↓
+FastAPI recibe la solicitud
+  ↓
+El esquema valida los datos
+  ↓
+¿Los datos son válidos?
+  ├── NO → Devolver respuesta de error
+  │
+  └── SÍ
+        ↓
+¿El usuario existe?
+  ├── NO → Devolver respuesta de error
+  │
+  └── SÍ
+        ↓
+Aplicar reglas de negocio
+        ↓
+Crear el producto
+        ↓
+SQLModel procesa la operación
+        ↓
+PostgreSQL almacena la información
+        ↓
+La API devuelve una respuesta exitosa
+        ↓
+El frontend muestra la confirmación
+        ↓
+FIN
+```
+
+Este proceso permite demostrar la trazabilidad desde la interacción del usuario hasta el almacenamiento de la información en la base de datos.
+
+---
+
+# FASE 2 — DISEÑO Y CONSTRUCCIÓN DE LA API
+
+# 13. Recurso principal
+
+El recurso principal del módulo es:
+
+```text
+/productos
+```
+
+---
+
+# 14. Endpoints del módulo
+
+| Método | Endpoint                          | Función                         |
+| ------ | --------------------------------- | ------------------------------- |
+| POST   | `/productos`                      | Registrar producto              |
+| GET    | `/productos`                      | Consultar productos             |
+| GET    | `/productos/{id_producto}`        | Consultar un producto           |
+| GET    | `/productos/usuario/{id_usuario}` | Consultar productos por usuario |
+| PUT    | `/productos/{id_producto}`        | Actualizar producto             |
+| DELETE | `/productos/{id_producto}`        | Eliminar producto               |
+
+Los nombres exactos de las rutas deben verificarse con el código definitivo de Revenfy antes de la entrega final.
+
+---
+
+# 15. Arquitectura del backend
+
+La organización actual del backend de Revenfy permite separar las responsabilidades del sistema.
+
+El flujo general es:
+
+```text
+CLIENTE / FRONTEND
+        ↓
+      ROUTER
+        ↓
+     SERVICIO
+        ↓
+VALIDACIONES / ESQUEMAS
+        ↓
+ MODELOS SQLMODEL
+        ↓
+    POSTGRESQL
+```
+
+---
+
+## Router
+
+El Router recibe las solicitudes HTTP y dirige la operación correspondiente.
+
+Ejemplo:
+
+```text
+POST /productos
+```
+
+---
+
+## Servicio
+
+La capa de servicios concentra la lógica necesaria para realizar las operaciones.
+
+Entre sus responsabilidades se encuentran:
+
+* Consultar información.
+* Verificar la existencia de registros.
+* Aplicar reglas de negocio.
+* Crear registros.
+* Actualizar registros.
+* Eliminar registros.
+
+---
+
+## Esquemas
+
+Los esquemas controlan la estructura y validación de los datos recibidos y devueltos por la API.
+
+Dentro del proyecto se han trabajado esquemas como:
+
+```text
+ProductoCrear
+ProductoActualizar
+ProductoRespuesta
+```
+
+Estos nombres deben coincidir con los archivos y clases existentes en el código definitivo.
+
+---
+
+## Modelos
+
+Los modelos representan las entidades utilizadas para trabajar con la base de datos.
+
+El proyecto utiliza SQLModel para gestionar la relación entre la aplicación y PostgreSQL.
+
+---
+
+## PostgreSQL
+
+PostgreSQL es la base de datos utilizada para almacenar permanentemente la información de Revenfy.
+
+---
+
+# 16. Pruebas de la API
+
+Las pruebas permiten comprobar que las funcionalidades implementadas responden correctamente.
+
+## Prueba 1 — Registro correcto
+
+### Acción
+
+Enviar información válida para registrar un producto.
+
+### Resultado esperado
+
+El sistema debe registrar el producto y devolver una respuesta exitosa.
+
+Normalmente, para una creación REST se utiliza:
+
+```text
+201 Created
+```
+
+si este es el código configurado en la implementación actual.
+
+---
+
+## Prueba 2 — Datos inválidos
+
+### Acción
+
+Enviar información que incumpla una validación existente.
+
+### Resultado esperado
+
+La solicitud debe ser rechazada.
+
+FastAPI normalmente utiliza:
+
+```text
+422 Unprocessable Entity
+```
+
+cuando falla la validación automática de los datos.
+
+El comportamiento final debe corresponder a las validaciones implementadas.
+
+---
+
+## Prueba 3 — Producto inexistente
+
+### Acción
+
+Consultar un identificador inexistente.
+
+Ejemplo:
+
+```text
+GET /productos/999999
+```
+
+### Resultado esperado
+
+El sistema debe devolver un error controlado.
+
+Normalmente:
+
+```text
+404 Not Found
+```
+
+si este comportamiento está implementado en el servicio.
+
+---
+
+## Prueba 4 — Actualización correcta
+
+### Acción
+
+Actualizar un producto existente con información válida.
+
+### Resultado esperado
+
+El sistema debe modificar la información y devolver una respuesta exitosa.
+
+Normalmente:
+
+```text
+200 OK
+```
+
+si esta es la respuesta configurada.
+
+---
+
+## Prueba 5 — Actualizar un producto inexistente
+
+### Acción
+
+Intentar actualizar un producto que no existe.
+
+### Resultado esperado
+
+El sistema debe devolver un error controlado.
+
+Normalmente:
+
+```text
+404 Not Found
+```
+
+si este es el comportamiento implementado.
+
+---
+
+## Prueba 6 — Eliminar producto
+
+### Acción
+
+Eliminar un producto existente.
+
+### Resultado esperado
+
+El sistema debe ejecutar la operación según la lógica actual y devolver una respuesta exitosa.
+
+---
+
+# FASE 3 — CONSTRUCCIÓN DEL FRONTEND
+
+Para completar el MVP, el frontend debe conectarse con la API real.
+
+No debe utilizar únicamente datos escritos manualmente para simular que la información proviene de PostgreSQL.
+
+El flujo correcto es:
+
+```text
+FRONTEND
+    ↓
+API REST
+    ↓
+FASTAPI
+    ↓
+POSTGRESQL
+```
+
+---
+
+# 17. Pantallas necesarias para el MVP
+
+## Pantalla 1 — Listado de productos
+
+Debe permitir:
+
+* Consultar los productos.
+* Visualizar información básica.
+* Seleccionar un producto.
+
+La información mostrada debe corresponder a los datos disponibles en la API.
+
+---
+
+## Pantalla 2 — Registrar producto
+
+Debe permitir ingresar la información requerida por el modelo y el esquema definitivo.
+
+Los campos pueden incluir, según el modelo final:
+
+* Nombre.
+* Descripción.
+* Precio.
+* Categoría.
+* Usuario.
+* País de origen.
+
+Los campos definitivos deben coincidir exactamente con el esquema `ProductoCrear` utilizado por la API.
+
+---
+
+## Pantalla 3 — Mis productos
+
+Debe permitir que el vendedor consulte los productos asociados a su usuario.
+
+La información debe obtenerse desde el endpoint correspondiente.
+
+Ejemplo:
+
+```text
+GET /productos/usuario/{id_usuario}
+```
+
+---
+
+## Pantalla 4 — Detalle del producto
+
+Debe mostrar la información completa de un producto específico.
+
+Consume la información desde:
+
+```text
+GET /productos/{id_producto}
+```
+
+---
+
+## Pantalla 5 — Editar producto
+
+Debe permitir modificar la información de un producto existente.
+
+Consume:
+
+```text
+PUT /productos/{id_producto}
+```
+
+---
+
+## Acción — Eliminar producto
+
+Debe permitir retirar un producto utilizando la API.
+
+Consume:
+
+```text
+DELETE /productos/{id_producto}
+```
+
+---
+
+# 18. Flujo completo del MVP
+
+La siguiente estructura resume la trazabilidad completa del módulo:
+
+```text
+NECESIDAD DEL NEGOCIO
+        ↓
+El vendedor necesita publicar productos
+        ↓
+HISTORIA DE USUARIO
+        ↓
+HU01 — Registrar producto
+        ↓
+REQUISITO FUNCIONAL
+        ↓
+RF01 — Registrar producto
+        ↓
+REGLAS DE NEGOCIO
+        ↓
+RN01 — Precio válido
+RN02 — Usuario existente
+RN03 — Información válida
+RN06 — Relaciones válidas
+        ↓
+CASO DE USO
+        ↓
+CU01 — Registrar producto
+        ↓
+MODELO DE DATOS
+        ↓
+PRODUCTO
+        ↓
+RELACIONES
+        ↓
+USUARIO
+CATEGORÍA
+PAÍS
+        ↓
+BACKEND
+        ↓
+POST /productos
+        ↓
+Router
+        ↓
+Servicio
+        ↓
+Esquema
+        ↓
+SQLModel
+        ↓
+PostgreSQL
+        ↓
+FRONTEND
+        ↓
+Formulario Registrar Producto
+        ↓
+RESULTADO
+        ↓
+Producto registrado en Revenfy
+```
+
+---
+
+# 19. Matriz final de trazabilidad
+
+| Funcionalidad                   | RF   | HU   | RN                     | CU   | Entidad            | Endpoint                              | Frontend                      |
+| ------------------------------- | ---- | ---- | ---------------------- | ---- | ------------------ | ------------------------------------- | ----------------------------- |
+| Registrar producto              | RF01 | HU01 | RN01, RN02, RN03, RN06 | CU01 | Producto           | POST `/productos`                     | Formulario Registrar Producto |
+| Consultar productos             | RF02 | HU02 | —                      | CU02 | Producto           | GET `/productos`                      | Listado de Productos          |
+| Consultar producto              | RF03 | HU03 | RN04                   | CU03 | Producto           | GET `/productos/{id_producto}`        | Detalle del Producto          |
+| Consultar productos por usuario | RF04 | HU04 | RN02, RN04             | CU04 | Usuario - Producto | GET `/productos/usuario/{id_usuario}` | Mis Productos                 |
+| Actualizar producto             | RF05 | HU05 | RN01, RN03, RN04, RN05 | CU05 | Producto           | PUT `/productos/{id_producto}`        | Editar Producto               |
+| Eliminar producto               | RF06 | HU06 | RN04, RN05             | CU06 | Producto           | DELETE `/productos/{id_producto}`     | Gestión del Producto          |
+
+---
+
+# 20. Conclusión
+
+El MVP seleccionado para Revenfy corresponde al **Módulo de Gestión de Productos**.
+
+La selección de este módulo se fundamenta en que actualmente cuenta con operaciones desarrolladas para el registro, consulta, actualización y eliminación de productos.
+
+Además, permite demostrar la relación entre diferentes elementos del proyecto:
+
+```text
+Necesidad del negocio
+        ↓
+Historia de Usuario
+        ↓
+Requisito Funcional
+        ↓
+Regla de Negocio
+        ↓
+Caso de Uso
+        ↓
+Modelo de Datos
+        ↓
+Relaciones entre Entidades
+        ↓
+API REST
+        ↓
+Router
+        ↓
+Servicio
+        ↓
+Esquemas
+        ↓
+Modelos
+        ↓
+PostgreSQL
+        ↓
+Pruebas
+        ↓
+Frontend
+```
+
+De esta manera, el módulo permite demostrar la trazabilidad completa entre el análisis y la implementación técnica.
+
+El objetivo final es garantizar que Revenfy no sea únicamente un conjunto de tablas, endpoints y pantallas desarrolladas por separado, sino un sistema coherente en el que cada funcionalidad tenga una relación clara con una necesidad del negocio y pueda seguirse desde su definición hasta su funcionamiento.
+
+---
+
+# Recomendaciones para la entrega final
+
+Antes de entregar esta guía se debe realizar una revisión final entre la documentación y el código definitivo de Revenfy.
+
+Se deben verificar especialmente:
+
+* Los nombres reales de las entidades.
+* Los atributos reales de Producto.
+* Los nombres exactos de los esquemas.
+* Las rutas reales de los endpoints.
+* Los códigos HTTP realmente configurados.
+* Las validaciones existentes.
+* Las reglas de negocio realmente implementadas.
+* El estado real de autenticación y autorización.
+* Las relaciones definitivas del Modelo Entidad-Relación.
+
+La regla principal para la documentación final será:
+
+> **La documentación debe describir lo que el sistema realmente hace y diferenciar claramente las funcionalidades desarrolladas de las funcionalidades planeadas o modeladas para futuras versiones.**
+
