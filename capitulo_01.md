@@ -1,4 +1,4 @@
-# CAPÍTULO 1. RESUMEN EJECUTIVO
+ # CAPÍTULO 1. RESUMEN EJECUTIVO
 
 ## 1.1 Nombre del Proyecto
 
@@ -106,40 +106,74 @@ El alcance de Revenfy se divide entre las funcionalidades que se encuentran desa
 
 ### 1.7.1 Funcionalidades implementadas
 
-De acuerdo con el estado actual del desarrollo, Revenfy cuenta con funcionalidades orientadas principalmente a la gestión de usuarios, productos y la comunicación con la base de datos mediante una API REST.
+De acuerdo con el estado actual del desarrollo, Revenfy cuenta con funcionalidades orientadas principalmente a la gestión de pedidos.
 
 Las funcionalidades desarrolladas comprenden:
 
-1. Registro de usuarios.
+1. Identificar al comprador.
+   
+- Saber qué usuario está realizando el pedido.
 
-2. Consulta de usuarios.
+2. Seleccionar el producto
+   
+- El producto debe existir.
+Debe estar disponible.
 
-3. Actualización de usuarios.
+3. Indicar la cantidad
 
-4. Eliminación de usuarios.
+- Registrar cuántas unidades quiere comprar.
 
-5. Registro de productos.
+4. Crear el pedido
 
-6. Consulta de productos.
+- Generar el pedido asociado al comprador.
 
-7. Consulta de productos relacionados con un usuario.
+5. Crear el detalle del pedido
 
-8. Actualización de productos.
+- Relacionar:
 
-9. Eliminación de productos.
+pedido_id
+producto_id
+cantidad
 
-10. Validación de la información recibida mediante los esquemas definidos para el sistema.
+6. Calcular el total
 
-11. Conexión del backend con la base de datos PostgreSQL.
+- Tomar el precio del producto y multiplicarlo por la cantidad.
 
-12. Exposición de los servicios mediante endpoints de una API REST desarrollada con FastAPI.
+- Si el pedido tiene varios productos, sumar sus valores.
 
-13. Documentación y prueba de los endpoints mediante Swagger UI.
+7. Actualizar el estado del producto
 
-14. Organización del código mediante componentes separados para modelos, esquemas, servicios, enrutadores y configuración.
+- Por ejemplo, si se compra la única unidad disponible, el producto puede pasar de Disponible → Vendido.
 
-Estas funcionalidades corresponden al estado actual documentado del desarrollo y no representan necesariamente la totalidad de las funcionalidades planteadas inicialmente para Revenfy.
+8. Guardar toda la información en PostgreSQL
 
+- Pedido.
+  
+- Detalles del pedido.
+  
+- Productos relacionados.
+  
+- Usuario comprador.
+
+# Flujo de MVP
+
+COMPRADOR
+   ↓
+Selecciona producto
+   ↓
+Indica cantidad
+   ↓
+CREA PEDIDO
+   ↓
+Se crea DETALLE DEL PEDIDO
+   ↓
+Se calcula TOTAL
+   ↓
+Se actualiza estado del producto
+   ↓
+PEDIDO GUARDADO
+
+---
 ### 1.7.2 Funcionalidades futuras
 
 Como parte de la evolución del proyecto se contempla la implementación o fortalecimiento de las siguientes funcionalidades:
@@ -167,4 +201,3 @@ Como parte de la evolución del proyecto se contempla la implementación o forta
 11. Preparar la plataforma para una posible ampliación a otras sedes del SENA.
 
 El alcance podrá ampliarse progresivamente de acuerdo con las necesidades identificadas durante el desarrollo y con las prioridades establecidas para las siguientes etapas del proyecto.
-
